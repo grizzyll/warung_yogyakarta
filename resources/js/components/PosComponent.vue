@@ -1,220 +1,177 @@
-
 <template>
-    <div class="flex h-[calc(100vh-140px)] gap-6"> 
+    <div class="flex h-[calc(100vh-100px)] gap-4 font-sans p-2"> 
         
-        <!-- BAGIAN KIRI: KATALOG MENU -->
-        <div class="w-2/3 flex flex-col">
-            <!-- Filter Kategori (Contoh UX Simpel) -->
-            <div class="flex gap-3 mb-4 overflow-x-auto pb-2">
-                <button class="px-6 py-2 bg-brand-red text-white rounded-full font-bold shadow-md hover:bg-red-700 transition">Semua</button>
-                <button class="px-6 py-2 bg-white text-gray-600 rounded-full font-bold shadow-sm hover:bg-gray-100 transition border border-gray-200">Makanan</button>
-                <button class="px-6 py-2 bg-white text-gray-600 rounded-full font-bold shadow-sm hover:bg-gray-100 transition border border-gray-200">Minuman</button>
+        <!-- KIRI: KATALOG PRODUK -->
+        <div class="flex-1 flex flex-col h-full overflow-hidden">
+            
+            <!-- Filter Bar -->
+            <div class="flex items-center justify-between mb-4 shrink-0">
+                <div class="flex gap-2 overflow-x-auto pb-1">
+                    <button v-for="cat in ['Semua', 'Makanan', 'Minuman', 'Paket']" :key="cat"
+                            @click="setCategory(cat)" 
+                            :class="activeCategory === cat ? 'bg-primary text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200'"
+                            class="px-5 py-2 rounded-full font-bold transition text-sm whitespace-nowrap">
+                        {{ cat }}
+                    </button>
+                </div>
             </div>
 
-            <!-- Grid Produk -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto pr-2 pb-20">
-                <div v-for="product in products" :key="product.id" 
+            <!-- Grid Menu -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto pr-2 pb-24 content-start custom-scrollbar">
+                
+                <div v-for="product in filteredProducts" :key="product.id" 
                      @click="addToCart(product)"
-                     class="group bg-white rounded-xl shadow-sm hover:shadow-xl cursor-pointer transition-all duration-200 relative overflow-hidden border border-transparent hover:border-brand-yellow">
+                     class="group bg-white rounded-xl shadow-sm hover:shadow-lg cursor-pointer transition-all border border-gray-200 flex flex-col h-64 overflow-hidden relative">
                     
-                    <!-- Foto Dummy -->
-                    <div class="h-32 bg-gray-100 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                        <!-- Jika ada foto nanti: <img :src="product.image" ...> -->
-                        <i class="fas fa-utensils text-4xl text-gray-300 group-hover:text-brand-yellow"></i>
+                    <!-- 1. BAGIAN GAMBAR (Tinggi Kunci Mati h-36 = 144px) -->
+                    <div class="h-36 bg-gray-200 flex items-center justify-center relative shrink-0 overflow-hidden">
+                        
+                        <!-- JIKA ADA GAMBAR -->
+                        <img v-if="product.image" 
+                             :src="'/images/' + product.image" 
+                             alt="Menu"
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                        
+                        <!-- JIKA TIDAK ADA GAMBAR (Icon Default) -->
+                        <div v-else class="z-0">
+                            <i v-if="product.category === 'Minuman'" class="fas fa-glass-water text-5xl text-gray-400"></i>
+                            <i v-else-if="product.category === 'Paket'" class="fas fa-box-open text-5xl text-gray-400"></i>
+                            <i v-else class="fas fa-utensils text-5xl text-gray-400"></i>
+                        </div>
+                        
+                        <!-- Gradient Bayangan -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-gray-900/10 to-transparent pointer-events-none"></div>
+                        
+                        <!-- Harga -->
+                        <div class="absolute top-2 right-2 bg-white/95 backdrop-blur px-2 py-1 rounded text-xs font-bold text-gray-800 shadow-sm z-10">
+                            Rp {{ formatPriceShort(product.price) }}
+                        </div>
                     </div>
 
-                    <!-- Info Produk -->
-                    <div class="p-4">
-                        <h3 class="font-bold text-gray-800 leading-tight mb-1 group-hover:text-brand-red">{{ product.name }}</h3>
-                        <p class="text-brand-red font-black text-lg">Rp {{ formatPrice(product.price) }}</p>
+                    <!-- 2. BAGIAN TEKS (Sisa Ruang) -->
+                    <div class="p-3 bg-white flex flex-col flex-1 relative z-10">
+                        <h3 class="font-bold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-primary mb-1">
+                            {{ product.name }}
+                        </h3>
+                        
+                        <div class="mt-auto flex justify-between items-center">
+                            <span class="text-[10px] text-gray-500 uppercase bg-gray-100 px-2 py-1 rounded font-bold">
+                                {{ product.category }}
+                            </span>
+                            
+                            <!-- Tombol Plus Kecil -->
+                            <div class="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs shadow">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Efek Klik (Overlay) -->
-                    <div class="absolute inset-0 bg-brand-yellow opacity-0 group-active:opacity-20 transition-opacity"></div>
-                    
-                    <!-- Tombol Plus Kecil -->
-                    <div class="absolute bottom-3 right-3 bg-gray-100 text-brand-red w-8 h-8 rounded-full flex items-center justify-center shadow-sm group-hover:bg-brand-red group-hover:text-white transition">
-                        <i class="fas fa-plus"></i>
-                    </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- BAGIAN KANAN: KERANJANG BELANJA -->
-        <div class="w-1/3 bg-white rounded-2xl shadow-lg border border-gray-200 flex flex-col overflow-hidden">
-            <!-- Header Keranjang -->
-            <div class="bg-brand-red p-4 text-white shadow-md z-10">
-                <div class="flex justify-between items-center">
-                    <h2 class="font-bold text-lg"><i class="fas fa-shopping-basket mr-2"></i> Pesanan</h2>
-                    <span class="bg-red-800 text-xs px-2 py-1 rounded-lg">{{ cartTotalQty }} Item</span>
-                </div>
+        <!-- KANAN: KERANJANG -->
+        <div class="w-80 bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col h-full shrink-0">
+            <!-- Header -->
+            <div class="p-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                <h2 class="font-bold text-gray-800 flex justify-between items-center">
+                    <span>Pesanan</span>
+                    <span class="bg-primary text-white text-xs px-2 py-0.5 rounded-full">{{ cartTotalQty }}</span>
+                </h2>
             </div>
 
-            <!-- List Item -->
-            <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                <div v-if="cart.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400 opacity-60">
-                    <i class="fas fa-receipt text-6xl mb-4"></i>
-                    <p class="font-medium">Belum ada pesanan</p>
-                    <p class="text-sm">Klik menu di kiri untuk menambah</p>
+            <!-- List -->
+            <div class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
+                <div v-if="cart.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400 text-sm">
+                    <i class="fas fa-basket-shopping text-2xl mb-2 opacity-50"></i>
+                    Keranjang Kosong
                 </div>
 
-                <div v-else v-for="(item, index) in cart" :key="index" class="bg-white p-3 rounded-lg shadow-sm border-l-4 border-brand-yellow flex justify-between items-center">
-                    <div class="flex-1">
-                        <h4 class="font-bold text-gray-800 text-sm">{{ item.name }}</h4>
-                        <div class="text-xs text-gray-500 mt-1">@ Rp {{ formatPrice(item.price) }}</div>
+                <div v-else v-for="(item, index) in cart" :key="index" class="flex gap-2 p-2 bg-white border border-gray-100 rounded-lg shadow-sm">
+                    <div class="flex flex-col items-center justify-center gap-1 bg-gray-50 rounded w-6 shrink-0">
+                        <button @click="addToCart(item)" class="text-green-600 text-[10px]"><i class="fas fa-plus"></i></button>
+                        <span class="font-bold text-xs">{{ item.qty }}</span>
+                        <button @click="decreaseQty(index)" class="text-red-500 text-[10px]"><i class="fas fa-minus"></i></button>
                     </div>
-                    
-                    <!-- Kontrol Jumlah (UX Mudah) -->
-                    <div class="flex items-center gap-3 bg-gray-100 rounded-lg px-2 py-1">
-                        <button @click="decreaseQty(index)" class="text-gray-500 hover:text-red-500 w-6 h-6 flex items-center justify-center font-bold">-</button>
-                        <span class="font-bold text-gray-800 w-4 text-center text-sm">{{ item.qty }}</span>
-                        <button @click="addToCart(item)" class="text-brand-red w-6 h-6 flex items-center justify-center font-bold">+</button>
-                    </div>
-
-                    <div class="text-right w-16">
-                        <p class="font-bold text-brand-red text-sm">{{ formatPrice(item.price * item.qty) }}</p>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-bold text-gray-800 truncate">{{ item.name }}</div>
+                        <div class="flex justify-between text-[10px] text-gray-500 mt-1">
+                            <span>@ {{ formatPriceShort(item.price) }}</span>
+                            <span class="font-bold text-primary">Rp {{ formatPrice(item.price * item.qty) }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Bagian Bawah: Total & Bayar -->
-            <div class="p-5 bg-white border-t border-gray-200 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] z-10">
-                <div class="flex justify-between mb-2 text-gray-600 text-sm">
-                    <span>Subtotal</span>
-                    <span>Rp {{ formatPrice(totalPrice) }}</span>
+            <!-- Footer -->
+            <div class="p-4 bg-gray-50 border-t border-gray-100 rounded-b-xl">
+                <div class="flex justify-between items-end mb-3">
+                    <span class="text-xs text-gray-500 font-bold">TOTAL</span>
+                    <span class="text-xl font-black text-gray-800">Rp {{ formatPrice(totalPrice) }}</span>
                 </div>
-                <div class="flex justify-between mb-4">
-                    <span class="text-xl font-bold text-gray-800">Total</span>
-                    <span class="text-2xl font-black text-brand-red">Rp {{ formatPrice(totalPrice) }}</span>
-                </div>
-
-                <button 
-    @click="processPayment" 
-    :disabled="isLoading || cart.length === 0"
-    class="w-full bg-brand-yellow text-brand-black font-bold text-lg py-4 rounded-xl shadow-lg hover:bg-yellow-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
-    
-    <span v-if="!isLoading">BAYAR SEKARANG</span>
-    <span v-else>Memproses...</span>
-    
-    <i v-if="!isLoading" class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-</button>
+                <button @click="processPayment" :disabled="isLoading || cart.length === 0"
+                        class="w-full bg-primary hover:bg-red-800 text-white font-bold py-3 rounded-lg text-sm transition shadow disabled:opacity-50">
+                    {{ isLoading ? 'Memproses...' : 'BAYAR' }}
+                </button>
             </div>
         </div>
-
     </div>
 </template>
 
 <script setup>
-import Swal from 'sweetalert2'; // <--- TAMBAHKAN INI
 import { ref, computed } from 'vue';
-import axios from 'axios'; // <--- WAJIB ADA
+import axios from 'axios';
+import Swal from 'sweetalert2';
 
-const props = defineProps({
-    products: Array
+const props = defineProps({ products: Array });
+const activeCategory = ref('Semua');
+const cart = ref([]);
+const isLoading = ref(false);
+
+const filteredProducts = computed(() => {
+    return activeCategory.value === 'Semua' 
+        ? props.products 
+        : props.products.filter(p => p.category === activeCategory.value);
 });
 
-const cart = ref([]);
-const isLoading = ref(false); // Biar tombol ga dipencet 2x
-
-// ... (Kode formatPrice, addToCart, decreaseQty, totalPrice TETAP SAMA seperti sebelumnya) ...
-// ... Copy paste aja fungsi-fungsi helper yang lama di sini ...
-
-const formatPrice = (value) => {
-    return (value / 1000).toFixed(0) + 'k';
-};
+const setCategory = (cat) => activeCategory.value = cat;
+const formatPrice = (val) => new Intl.NumberFormat('id-ID').format(val);
+const formatPriceShort = (val) => (val / 1000).toFixed(0) + 'k';
 
 const addToCart = (product) => {
-    const existingItem = cart.value.find(item => item.id === product.id);
-    if (existingItem) {
-        existingItem.qty++;
-    } else {
-        cart.value.push({ ...product, qty: 1 });
-    }
+    const item = cart.value.find(i => i.id === product.id);
+    if (item) item.qty++; else cart.value.push({ ...product, qty: 1 });
 };
 
 const decreaseQty = (index) => {
-    if (cart.value[index].qty > 1) {
-        cart.value[index].qty--;
-    } else {
-        cart.value.splice(index, 1);
-    }
+    if (cart.value[index].qty > 1) cart.value[index].qty--; else cart.value.splice(index, 1);
 };
 
-const totalPrice = computed(() => {
-    return cart.value.reduce((sum, item) => sum + (item.price * item.qty), 0);
-});
+const totalPrice = computed(() => cart.value.reduce((sum, i) => sum + (i.price * i.qty), 0));
+const cartTotalQty = computed(() => cart.value.reduce((sum, i) => sum + i.qty, 0));
 
-const cartTotalQty = computed(() => {
-    return cart.value.reduce((sum, item) => sum + item.qty, 0);
-});
-
-// --- FUNGSI BAYAR DENGAN POPUP CANTIK ---
 const processPayment = async () => {
-    // 1. Cek Keranjang Kosong
-    if (cart.value.length === 0) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Keranjang masih kosong!',
-            confirmButtonColor: '#D9232D',
-        });
-        return;
-    }
-
-    // 2. Konfirmasi Pembayaran (Pengganti confirm biasa)
-    const result = await Swal.fire({
-        title: 'Konfirmasi Pembayaran',
-        html: `Total tagihan: <b>Rp ${formatPrice(totalPrice.value)}</b><br>Proses pesanan ini?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#D9232D', // Warna Merah Brand
-        cancelButtonColor: '#9CA3AF',
-        confirmButtonText: 'Ya, Bayar!',
-        cancelButtonText: 'Batal'
+    if (!cart.value.length) return;
+    const res = await Swal.fire({
+        title: 'Bayar?', html: `Total: <b>Rp ${formatPrice(totalPrice.value)}</b>`,
+        icon: 'question', showCancelButton: true, confirmButtonColor: '#B91C1C', confirmButtonText: 'Ya'
     });
-
-    // Kalau user klik Batal, berhenti di sini
-    if (!result.isConfirmed) return;
+    if (!res.isConfirmed) return;
 
     isLoading.value = true;
-
     try {
-        const tokenMeta = document.querySelector('meta[name="csrf-token"]');
-        const token = tokenMeta ? tokenMeta.getAttribute('content') : '';
-
-        const response = await axios.post('/pos/store', {
-            cart: cart.value,
-            total_price: totalPrice.value
-        }, {
-            headers: {
-                'X-CSRF-TOKEN': token,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.data.status === 'success') {
-            // 3. Pesan Sukses Cantik
-            Swal.fire({
-                title: 'Transaksi Berhasil!',
-                text: `Nomor Nota: ${response.data.order_number}`,
-                icon: 'success',
-                confirmButtonColor: '#D9232D',
-                timer: 3000, // Otomatis tutup dalam 3 detik
-                timerProgressBar: true
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const resp = await axios.post('/pos/store', { cart: cart.value, total_price: totalPrice.value }, { headers: { 'X-CSRF-TOKEN': token }});
+        if (resp.data.status === 'success') {
+            const nota = resp.data.order_number;
+            Swal.fire({ title: 'Sukses', text: 'Nota: ' + nota, icon: 'success', confirmButtonText: '🖨️ Cetak', showCancelButton: true }).then((r) => {
+                if(r.isConfirmed) window.open(`/pos/print/${nota}`, '_blank');
             });
-
-            cart.value = []; // Kosongkan keranjang
+            cart.value = [];
         }
-
-    } catch (error) {
-        console.error(error);
-        // 4. Pesan Error Cantik
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: 'Terjadi kesalahan pada sistem.',
-            confirmButtonColor: '#D9232D'
-        });
+    } catch (e) {
+        Swal.fire('Error', 'Gagal', 'error');
     } finally {
         isLoading.value = false;
     }

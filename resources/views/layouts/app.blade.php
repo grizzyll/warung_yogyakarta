@@ -4,92 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
-    <title>Sistem Ayam Yogya</title>
-    
+    <title>Ayam Yogya POS</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; } </style>
 </head>
-<body class="bg-brand-gray font-sans antialiased text-brand-black">
-
-    <div class="min-h-screen flex" id="app">
+<body class="text-gray-800 antialiased">
+<div class="flex h-screen overflow-hidden" id="app">
         
-        <!-- SIDEBAR -->
-        <aside class="w-72 bg-brand-red text-white flex flex-col shadow-2xl fixed h-full z-20">
-            <!-- Logo -->
-            <div class="h-24 flex items-center justify-center bg-white border-b-4 border-brand-yellow px-4">
-                <img src="/logo.png" alt="Ayam Yogya" class="h-16 object-contain">
+        <!-- SIDEBAR MODERN -->
+        <aside class="w-64 bg-primary-dark text-white flex flex-col shadow-2xl z-20">
+            <!-- Brand -->
+            <div class="h-20 flex items-center justify-center border-b border-red-900/30 bg-primary-dark relative">
+                <div class="absolute left-0 top-0 h-full w-1 bg-accent"></div>
+                <div class="flex items-center gap-3">
+                    <div class="bg-white p-1.5 rounded-lg shadow-lg">
+                        <img src="/logo.png" alt="Logo" class="h-8 w-8 object-contain">
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg tracking-wide leading-none">AYAM YOGYA</h1>
+                        <span class="text-[10px] text-red-200 uppercase tracking-widest">Enterprise System</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Menu Navigation -->
-            <nav class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
+            <!-- Menu -->
+            <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
                 
-                <!-- Menu Owner -->
+                <!-- Group: Management -->
                 @if(Auth::check() && (Auth::user()->role == 'owner' || Auth::user()->role == 'admin'))
-                <div class="text-xs font-bold text-red-200 uppercase tracking-widest mb-2 border-b border-red-400 pb-1">Owner Area</div>
+                <div class="px-3 mb-2 mt-2 text-[10px] font-bold text-red-300 uppercase tracking-wider">Management</div>
                 
-                <a href="{{ route('dashboard') }}" 
-                   class="flex items-center px-4 py-3 rounded-xl transition font-medium
-                          {{ request()->routeIs('dashboard') ? 'bg-red-800 text-white border-l-4 border-brand-yellow shadow-inner' : 'text-red-100 hover:bg-red-700 hover:text-white' }}">
-                    <i class="fas fa-chart-pie w-6 opacity-80"></i> Dashboard
+                <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('dashboard') ? 'bg-gradient-to-r from-primary to-primary-light shadow-lg text-white' : 'text-red-100 hover:bg-white/10' }}">
+                    <i class="fas fa-chart-pie w-6 {{ request()->routeIs('dashboard') ? 'text-accent' : 'text-red-300 group-hover:text-white' }}"></i>
+                    <span class="font-medium">Dashboard</span>
                 </a>
                 @endif
 
-                <div class="text-xs font-bold text-red-200 uppercase tracking-widest mt-6 mb-2 border-b border-red-400 pb-1">Operasional</div>
+                @if(Auth::user()->role == 'admin')
+                <a href="{{ route('restock.create') }}" class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('restock.create') ? 'bg-gradient-to-r from-primary to-primary-light shadow-lg text-white' : 'text-red-100 hover:bg-white/10' }}">
+                    <i class="fas fa-boxes w-6 {{ request()->routeIs('restock.create') ? 'text-accent' : 'text-red-300 group-hover:text-white' }}"></i>
+                    <span class="font-medium">Stok & Belanja</span>
+                </a>
+                @endif
 
-                <!-- Menu KASIR (Perhatikan class text-red-100) -->
-                <a href="{{ route('pos.index') }}" 
-                   class="group flex items-center px-4 py-3 rounded-xl transition font-medium
-                          {{ request()->routeIs('pos.index') ? 'bg-red-800 text-white border-l-4 border-brand-yellow shadow-inner' : 'text-red-100 hover:bg-red-700 hover:text-white' }}">
-                    <i class="fas fa-cash-register w-6 opacity-80"></i> KASIR (POS)
+                <!-- Group: Operasional -->
+                <div class="px-3 mb-2 mt-6 text-[10px] font-bold text-red-300 uppercase tracking-wider">Operasional</div>
+
+                <a href="{{ route('pos.index') }}" class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('pos.index') ? 'bg-gradient-to-r from-primary to-primary-light shadow-lg text-white' : 'text-red-100 hover:bg-white/10' }}">
+                    <i class="fas fa-cash-register w-6 {{ request()->routeIs('pos.index') ? 'text-accent' : 'text-red-300 group-hover:text-white' }}"></i>
+                    <span class="font-medium">Kasir (POS)</span>
                 </a>
 
-                <!-- Menu DAPUR -->
-                <a href="{{ route('kitchen.index') }}" 
-                   class="group flex items-center px-4 py-3 rounded-xl transition font-medium
-                          {{ request()->routeIs('kitchen.index') ? 'bg-red-800 text-white border-l-4 border-brand-yellow shadow-inner' : 'text-red-100 hover:bg-red-700 hover:text-white' }}">
-                    <i class="fas fa-fire w-6 opacity-80"></i> Dapur (KDS)
+                <a href="{{ route('kitchen.index') }}" class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('kitchen.index') ? 'bg-gradient-to-r from-primary to-primary-light shadow-lg text-white' : 'text-red-100 hover:bg-white/10' }}">
+                    <i class="fas fa-fire-burner w-6 {{ request()->routeIs('kitchen.index') ? 'text-accent' : 'text-red-300 group-hover:text-white' }}"></i>
+                    <span class="font-medium">Dapur (KDS)</span>
                 </a>
+            </nav>
 
-                <!-- Logout -->
-                <div class="mt-auto mb-4 pt-4 border-t border-red-500">
+            <!-- User Footer -->
+            <div class="p-4 border-t border-red-900/30 bg-red-900/20">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-accent to-yellow-600 flex items-center justify-center text-white font-bold shadow-md">
+                        {{ substr(Auth::user()->name ?? 'U', 0, 1) }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-white truncate">{{ Auth::user()->name }}</p>
+                        <p class="text-xs text-red-300 truncate capitalize">{{ Auth::user()->role }}</p>
+                    </div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="flex items-center px-4 py-3 text-red-100 hover:text-white hover:bg-red-700 rounded-xl w-full text-left transition font-medium">
-                            <i class="fas fa-sign-out-alt w-6"></i> Logout
-                        </button>
+                        <button type="submit" class="text-red-300 hover:text-white transition"><i class="fas fa-sign-out-alt"></i></button>
                     </form>
                 </div>
-            </nav>
+            </div>
         </aside>
 
-        <!-- KONTEN KANAN -->
-        <main class="flex-1 ml-72 flex flex-col min-h-screen bg-brand-gray relative">
-            <!-- Header -->
-            <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 sticky top-0 z-10 border-b border-gray-200">
-                <div>
-                    <h2 class="text-2xl font-bold text-brand-black tracking-tight">@yield('title', 'Dashboard')</h2>
-                </div>
-                
-                <div class="flex items-center gap-4">
-                    <div class="text-right hidden md:block">
-                        <p class="text-sm font-bold text-gray-800">{{ Auth::user()->name ?? 'Guest' }}</p>
-                        <p class="text-xs text-gray-500 font-semibold uppercase tracking-wide">{{ Auth::user()->role ?? '-' }}</p>
-                    </div>
-                    <div class="h-10 w-10 bg-brand-yellow rounded-full flex items-center justify-center text-brand-red font-bold shadow-md border-2 border-brand-red text-lg">
-                        {{ substr(Auth::user()->name ?? 'G', 0, 1) }}
-                    </div>
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col relative overflow-hidden bg-surface">
+            <!-- Header (Optional, mostly for title/breadcrumbs) -->
+            <header class="h-16 bg-paper shadow-sm flex items-center justify-between px-8 z-10">
+                <h2 class="text-xl font-bold text-gray-800 tracking-tight">@yield('title', 'Dashboard')</h2>
+                <div class="text-sm text-gray-500 font-medium">
+                    {{ date('l, d M Y') }}
                 </div>
             </header>
 
-            <!-- Isi Halaman -->
-            <div class="p-6 h-full overflow-y-auto">
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-x-hidden overflow-y-auto bg-surface p-6">
                 @yield('content')
             </div>
         </main>
-
     </div>
 </body>
 </html>

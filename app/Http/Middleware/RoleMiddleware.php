@@ -7,30 +7,33 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
-
 class RoleMiddleware
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * Perhatikan: ...$roles (Titik tiga) artinya menerima BANYAK argumen
      */
-     public function handle(Request $request, Closure $next, $role): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // 1. Cek apakah user sudah login?
+        // 1. Cek Login
         if (!Auth::check()) {
-            return redirect('/login');
+            return redirect()->route('login');
         }
 
-        // 2. Cek apakah jabatannya sesuai?
-        // Kita bisa pasang banyak role dipisah koma (misal: admin,owner)
-        $allowedRoles = explode(',', $role);
+        // 2. DISINI BEDANYA:
+        // Karena pakai '...$roles', variabel $roles otomatis sudah berbentuk Array.
+        // Isinya: ['cashier', 'owner', 'admin']
+        // Jadi kita TIDAK PERLU explode lagi.
 
-        if (in_array(Auth::user()->role, $allowedRoles)) {
-            return $next($request); // Silakan masuk
+        // 3. Cek Role User
+        // Apakah role user saya (owner) ada di dalam daftar itu?
+        if (in_array($request->user()->role, $roles)) {
+            return $next($request);
         }
 
-        // 3. Kalau jabatan gak sesuai, tolak!
-        abort(403, 'ANDA TIDAK PUNYA AKSES KE HALAMAN INI.');
+        // 4. Kalau gagal
+        // Kita gabungkan array jadi string biar pesan errornya jelas
+        $roleString = implode(', ', $roles);
+        
+        abort(403, 'AKSES DITOLAK. ROLE ANDA: ' . strtoupper(Auth::user()->role) . '. HALAMAN INI KHUSUS: ' . strtoupper($roleString));
     }
 }

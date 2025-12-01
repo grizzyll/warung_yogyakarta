@@ -17,10 +17,10 @@ class KitchenDisplayController extends Controller
     // 2. API: Ambil Data Order (Dipanggil tiap 5 detik oleh Vue)
     public function getOrders()
     {
-        // Ambil order yang statusnya 'pending' (Baru) atau 'cooking' (Sedang dimasak)
-        // Urutkan dari yang terlama (biar yang pesan duluan dimasak duluan)
-        $orders = Order::with('orderItems.product') // Ambil detail item & nama produk
-            ->whereIn('status', ['pending', 'cooking'])
+        // Hanya ambil Pending (Kecil/Sudah ACC) dan Cooking
+        // Waiting_approval GAK BAKAL KEMBIL
+        $orders = Order::with('orderItems.product')
+            ->whereIn('status', ['pending', 'cooking']) 
             ->orderBy('created_at', 'asc')
             ->get();
 

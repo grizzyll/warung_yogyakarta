@@ -1,154 +1,156 @@
 @extends('layouts.app')
 
-@section('title', 'Executive Dashboard')
+@section('title', 'Executive Overview')
 
 @section('content')
-    <!-- Notifikasi Sukses Approve -->
-    @if(session('success'))
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
-            <p class="font-bold">Sukses</p>
-            <p>{{ session('success') }}</p>
-        </div>
-    @endif
-
-    <!-- 1. KARTU KEUANGAN (RINGKASAN) -->
+    <!-- STATS CARDS -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Kartu 1: Omzet Hari Ini -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-red flex justify-between items-center">
-            <div>
-                <p class="text-gray-500 text-sm font-semibold uppercase">Omzet Hari Ini</p>
-                <h3 class="text-3xl font-black text-gray-800 mt-1">Rp {{ number_format($dailyRevenue, 0, ',', '.') }}</h3>
-                <p class="text-xs text-green-600 font-bold mt-2"><i class="fas fa-arrow-up"></i> {{ $dailyCount }} Transaksi</p>
+        <!-- Revenue Card -->
+        <div class="bg-white p-6 rounded-2xl shadow-soft border border-gray-100 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                <i class="fas fa-coins text-8xl text-primary"></i>
             </div>
-            <div class="bg-red-50 p-3 rounded-full text-brand-red">
-                <i class="fas fa-coins text-2xl"></i>
-            </div>
-        </div>
-
-        <!-- Kartu 2: Omzet Bulan Ini -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-brand-yellow flex justify-between items-center">
-            <div>
-                <p class="text-gray-500 text-sm font-semibold uppercase">Omzet Bulan Ini</p>
-                <h3 class="text-3xl font-black text-gray-800 mt-1">Rp {{ number_format($monthlyRevenue, 0, ',', '.') }}</h3>
-                <p class="text-xs text-gray-400 mt-2">Update Realtime</p>
-            </div>
-            <div class="bg-yellow-50 p-3 rounded-full text-brand-yellow">
-                <i class="fas fa-calendar-alt text-2xl"></i>
+            <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Omzet Hari Ini</p>
+            <h3 class="text-3xl font-black text-gray-800">Rp {{ number_format($dailyRevenue, 0, ',', '.') }}</h3>
+            <div class="mt-4 flex items-center text-xs font-medium text-green-600 bg-green-50 w-fit px-2 py-1 rounded-lg">
+                <i class="fas fa-arrow-up mr-1"></i> {{ $dailyCount }} Transaksi
             </div>
         </div>
 
-        <!-- Kartu 3: Estimasi Laba Bersih (Misal 30% dari Omzet - Simulasi) -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500 flex justify-between items-center">
-            <div>
-                <p class="text-gray-500 text-sm font-semibold uppercase">Est. Laba Bersih (30%)</p>
-                <h3 class="text-3xl font-black text-green-600 mt-1">Rp {{ number_format($monthlyRevenue * 0.3, 0, ',', '.') }}</h3>
-                <p class="text-xs text-gray-400 mt-2">Berdasarkan margin rata-rata</p>
+        <!-- Monthly Card -->
+        <div class="bg-white p-6 rounded-2xl shadow-soft border border-gray-100 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                <i class="fas fa-calendar-check text-8xl text-accent"></i>
             </div>
-            <div class="bg-green-50 p-3 rounded-full text-green-600">
-                <i class="fas fa-wallet text-2xl"></i>
+            <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Omzet Bulan Ini</p>
+            <h3 class="text-3xl font-black text-gray-800">Rp {{ number_format($monthlyRevenue, 0, ',', '.') }}</h3>
+            <div class="mt-4 text-xs text-gray-400">Update Realtime</div>
+        </div>
+
+        <!-- Profit Card -->
+        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl shadow-card text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+                <i class="fas fa-wallet text-8xl text-white"></i>
             </div>
+            <p class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Estimasi Laba Bersih</p>
+            <h3 class="text-3xl font-black text-green-400">Rp {{ number_format($monthlyRevenue * 0.3, 0, ',', '.') }}</h3>
+            <p class="text-xs text-gray-400 mt-4 opacity-70">Berdasarkan margin 30%</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        <!-- 2. APPROVAL PESANAN BESAR (CATERING) -->
-        <div class="bg-white rounded-xl shadow-md overflow-hidden">
-            <div class="bg-gray-800 px-6 py-4 flex justify-between items-center">
-                <h3 class="text-white font-bold"><i class="fas fa-bell text-brand-yellow mr-2"></i> Butuh Persetujuan</h3>
-                <span class="bg-red-500 text-white text-xs px-2 py-1 rounded">{{ count($pendingApprovals) }} Pending</span>
-            </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- LEFT: APPROVALS (Span 2) -->
+        <div class="lg:col-span-2 space-y-8">
             
-            <div class="p-0">
-                @if(count($pendingApprovals) > 0)
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-500 text-xs uppercase border-b">
-                                <th class="px-6 py-3">Nota</th>
-                                <th class="px-6 py-3">Detail</th>
-                                <th class="px-6 py-3">Total</th>
-                                <th class="px-6 py-3 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach($pendingApprovals as $order)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-6 py-4 font-bold text-gray-700">
-                                    {{ $order->order_number }}<br>
-                                    <span class="text-xs font-normal text-blue-500 bg-blue-50 px-2 py-0.5 rounded">{{ $order->order_type }}</span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-600">
-                                    <ul class="list-disc pl-4">
-                                        @foreach($order->orderItems as $item)
-                                            <li>{{ $item->product->name }} (x{{ $item->quantity }})</li>
-                                        @endforeach
-                                    </ul>
-                                </td>
-                                <td class="px-6 py-4 font-bold text-brand-red">
-                                    Rp {{ number_format($order->total_price, 0, ',', '.') }}
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <form action="{{ route('owner.approve', $order->id) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-4 rounded shadow transition transform hover:scale-105">
-                                            <i class="fas fa-check"></i> SETUJUI
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <div class="p-8 text-center text-gray-400">
-                        <i class="fas fa-check-circle text-4xl mb-3 text-green-200"></i>
-                        <p>Tidak ada pesanan besar yang tertunda.</p>
+            <!-- CATERING APPROVAL -->
+            <div class="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-accent rounded-full"></span> Approval Catering
+                    </h3>
+                    @if(count($pendingApprovals) > 0)
+                        <span class="bg-red-100 text-red-600 text-xs font-bold px-2 py-1 rounded-lg animate-pulse">{{ count($pendingApprovals) }} Pending</span>
+                    @endif
+                </div>
+                
+                <div class="p-0">
+                    @forelse($pendingApprovals as $order)
+                    <div class="p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition flex justify-between items-center">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-bold text-gray-800">{{ $order->order_number }}</span>
+                                <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded uppercase font-bold">{{ $order->order_type }}</span>
+                            </div>
+                            <p class="text-sm text-gray-500">
+                                @foreach($order->orderItems as $item) {{ $item->product->name }} (x{{ $item->quantity }}), @endforeach
+                            </p>
+                        </div>
+                        <div class="text-right flex items-center gap-4">
+                            <span class="font-bold text-primary text-lg">Rp {{ number_format($order->total_price, 0, ',', '.') }}</span>
+                            <form action="{{ route('owner.approve', $order->id) }}" method="POST">
+                                @csrf
+                                <button class="bg-green-100 text-green-700 hover:bg-green-600 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition">
+                                    Setujui
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                @endif
+                    @empty
+                    <div class="p-8 text-center text-gray-400">
+                        <i class="fas fa-check-circle text-4xl mb-2 text-gray-200"></i>
+                        <p class="text-sm">Semua pesanan aman.</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- RESTOCK APPROVAL -->
+            <div class="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-blue-500 rounded-full"></span> Approval Belanja (> 1 Juta)
+                    </h3>
+                    @if(count($pendingRestocks) > 0)
+                        <span class="bg-blue-100 text-blue-600 text-xs font-bold px-2 py-1 rounded-lg">{{ count($pendingRestocks) }} Pending</span>
+                    @endif
+                </div>
+                <div class="p-0">
+                    @forelse($pendingRestocks as $restock)
+                    <div class="p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-gray-800 mb-1">{{ $restock->supplier->name }}</div>
+                            <div class="text-xs text-gray-500">
+                                @foreach($restock->items as $item) {{ $item->ingredient->name }}: <b>{{ $item->quantity }} {{ $item->ingredient->unit }}</b>, @endforeach
+                            </div>
+                        </div>
+                        <div class="text-right flex items-center gap-4">
+                            <span class="font-bold text-gray-800 text-lg">Rp {{ number_format($restock->total_spent, 0, ',', '.') }}</span>
+                            <form action="{{ route('owner.approveRestock', $restock->id) }}" method="POST">
+                                @csrf
+                                <button class="bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition">
+                                    ACC Belanja
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="p-8 text-center text-gray-400">
+                        <p class="text-sm">Tidak ada belanja pending.</p>
+                    </div>
+                    @endforelse
+                </div>
             </div>
         </div>
 
-        <!-- 3. STOCK ALERT & KEBUTUHAN BELANJA -->
-        <div class="bg-white rounded-xl shadow-md overflow-hidden">
-            <div class="bg-brand-red px-6 py-4">
-                <h3 class="text-white font-bold"><i class="fas fa-exclamation-triangle text-brand-yellow mr-2"></i> Kebutuhan Belanja (Stok Menipis)</h3>
+        <!-- RIGHT: ALERTS -->
+        <div class="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden h-fit">
+            <div class="bg-primary px-6 py-4 text-white">
+                <h3 class="font-bold flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle text-accent"></i> Stok Menipis
+                </h3>
             </div>
-            
             <div class="p-0">
-                @if(count($lowStocks) > 0)
-                    <table class="w-full text-left">
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach($lowStocks as $item)
-                            <tr class="hover:bg-red-50 transition group">
-                                <td class="px-6 py-4">
-                                    <p class="font-bold text-gray-800">{{ $item->name }}</p>
-                                    <p class="text-xs text-gray-500">Supplier: {{ $item->supplier_id ?? 'Umum' }}</p>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <span class="text-xs text-gray-500 mr-2">Sisa:</span>
-                                    <span class="font-black text-red-600 text-lg">{{ $item->current_stock }} {{ $item->unit }}</span>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <a href="#" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-gray-700 font-bold">
-                                        <i class="fas fa-phone"></i> Hub. Supplier
-                                    </a>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <div class="p-8 text-center text-gray-400">
-                        <i class="fas fa-box-open text-4xl mb-3 text-gray-200"></i>
-                        <p>Semua stok aman terkendali.</p>
+                @forelse($lowStocks as $item)
+                <div class="p-4 border-b border-gray-50 flex justify-between items-center hover:bg-red-50 transition">
+                    <div>
+                        <div class="font-bold text-gray-800 text-sm">{{ $item->name }}</div>
+                        <div class="text-xs text-gray-500">Alert: {{ $item->stock_alert }} {{ $item->unit }}</div>
                     </div>
-                @endif
+                    <div class="text-right">
+                        <div class="text-lg font-black text-primary">{{ $item->current_stock }}</div>
+                        <div class="text-[10px] text-gray-400">Sisa Stok</div>
+                    </div>
+                </div>
+                @empty
+                <div class="p-8 text-center text-gray-400">
+                    <i class="fas fa-box text-4xl mb-2 text-gray-200"></i>
+                    <p class="text-sm">Gudang Aman.</p>
+                </div>
+                @endforelse
             </div>
-            <!-- Footer Link -->
-            <div class="bg-gray-50 p-3 text-center border-t">
-                <a href="#" class="text-sm text-brand-red font-bold hover:underline">Lihat Semua Laporan Stok &rarr;</a>
+            <div class="bg-gray-50 p-3 text-center text-xs text-gray-400">
+                Hubungi Admin untuk restock
             </div>
         </div>
-
     </div>
 @endsection
