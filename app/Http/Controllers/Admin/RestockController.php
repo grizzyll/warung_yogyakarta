@@ -77,12 +77,17 @@ class RestockController extends Controller
             }
 
             DB::commit();
+DB::commit();
 
-            // Pesan Balikan Beda-beda
+            // LOGIKA PENGARAHAN (REDIRECT)
+            // Mau Pending atau Sukses, kembalikan ke Halaman Keuangan (Finance) milik Admin.
+            
             if ($status === 'pending') {
-                return redirect()->route('dashboard')->with('success', 'Belanjaan Besar (Rp '.number_format($grandTotal).') Berhasil Disimpan! Menunggu Approval Owner agar stok masuk.');
+                // Pesan khusus kalau Pending
+                return redirect()->route('finance.index')->with('success', 'Belanjaan Besar (Rp '.number_format($grandTotal).') tercatat! Menunggu Approval Owner agar stok masuk.');
             } else {
-                return redirect()->route('dashboard')->with('success', 'Stok berhasil ditambahkan!');
+                // Pesan kalau langsung Sukses (Nominal Kecil)
+                return redirect()->route('finance.index')->with('success', 'Stok berhasil ditambahkan dan pengeluaran tercatat!');
             }
 
         } catch (\Exception $e) {

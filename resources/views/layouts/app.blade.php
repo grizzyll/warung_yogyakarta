@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,11 +10,17 @@
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style> body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; } </style>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6;
+        }
+    </style>
 </head>
+
 <body class="text-gray-800 antialiased">
-<div class="flex h-screen overflow-hidden" id="app">
-        
+    <div class="flex h-screen overflow-hidden" id="app">
+
         <!-- SIDEBAR MODERN -->
         <aside class="w-64 bg-primary-dark text-white flex flex-col shadow-2xl z-20">
             <!-- Brand -->
@@ -32,21 +39,31 @@
 
             <!-- Menu -->
             <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-                
+
                 <!-- Group: Management -->
-                @if(Auth::check() && (Auth::user()->role == 'owner' || Auth::user()->role == 'admin'))
-                <div class="px-3 mb-2 mt-2 text-[10px] font-bold text-red-300 uppercase tracking-wider">Management</div>
-                
+                <!-- Cuma Owner yang punya Dashboard -->
+                @if(Auth::check() && Auth::user()->role == 'owner')
+                <div class="px-3 mb-2 mt-2 text-[10px] font-bold text-red-300 uppercase tracking-wider">Owner Area</div>
+
                 <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('dashboard') ? 'bg-gradient-to-r from-primary to-primary-light shadow-lg text-white' : 'text-red-100 hover:bg-white/10' }}">
                     <i class="fas fa-chart-pie w-6 {{ request()->routeIs('dashboard') ? 'text-accent' : 'text-red-300 group-hover:text-white' }}"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
                 @endif
-
+                <!-- 2. FINANCE AREA (KHUSUS ADMIN) -->
                 @if(Auth::user()->role == 'admin')
-                <a href="{{ route('restock.create') }}" class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('restock.create') ? 'bg-gradient-to-r from-primary to-primary-light shadow-lg text-white' : 'text-red-100 hover:bg-white/10' }}">
+                <div class="px-3 mb-2 mt-2 text-[10px] font-bold text-red-300 uppercase tracking-wider">Finance</div>
+                
+                <a href="{{ route('finance.index') }}" 
+                   class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('finance.index') ? 'bg-gradient-to-r from-primary to-primary-light shadow-lg text-white' : 'text-red-100 hover:bg-white/10' }}">
+                    <i class="fas fa-wallet w-6 {{ request()->routeIs('finance.index') ? 'text-accent' : 'text-red-300 group-hover:text-white' }}"></i>
+                    <span class="font-medium">Keuangan Detail</span>
+                </a>
+
+                <a href="{{ route('restock.create') }}" 
+                   class="flex items-center px-4 py-3 rounded-xl transition-all duration-200 group {{ request()->routeIs('restock.create') ? 'bg-gradient-to-r from-primary to-primary-light shadow-lg text-white' : 'text-red-100 hover:bg-white/10' }}">
                     <i class="fas fa-boxes w-6 {{ request()->routeIs('restock.create') ? 'text-accent' : 'text-red-300 group-hover:text-white' }}"></i>
-                    <span class="font-medium">Stok & Belanja</span>
+                    <span class="font-medium">Belanja Stok</span>
                 </a>
                 @endif
 
@@ -99,4 +116,5 @@
         </main>
     </div>
 </body>
+
 </html>

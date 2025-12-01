@@ -31,22 +31,26 @@ Route::middleware('auth')->group(function () {
     });
 
     // C. AREA DASHBOARD MANAGEMENT
-    // Akses: Owner (Cek Laba/Approve), Admin (Cek Stok)
-    Route::middleware('role:owner,admin')->group(function () {
-        
-        // Dashboard Utama
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+   // HANYA OWNER yang boleh masuk sini
+Route::middleware('role:owner')->group(function () { 
+    
+    // Dashboard Utama
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // Action Approval (Khusus Owner sebenarnya, tapi Admin boleh akses URL ini untuk redirect aman)
-        Route::post('/dashboard/approve/{id}', [DashboardController::class, 'approveOrder'])->name('owner.approve');
-        Route::post('/dashboard/approve-restock/{id}', [DashboardController::class, 'approveRestock'])->name('owner.approveRestock');
-    });
+    // Action Approval
+    Route::post('/dashboard/approve/{id}', [DashboardController::class, 'approveOrder'])->name('owner.approve');
+    Route::post('/dashboard/approve-restock/{id}', [DashboardController::class, 'approveRestock'])->name('owner.approveRestock');
+});
 
-    // D. AREA BELANJA STOK (INPUT)
-    // Akses: HANYA ADMIN FINANCE (Sesuai request kamu: Owner tidak boleh input)
+    // D. AREA ADMIN (FINANCE & STOCK)
     Route::middleware('role:admin')->group(function () {
+        
+        // Restock (Yang lama)
         Route::get('/restock', [RestockController::class, 'create'])->name('restock.create');
         Route::post('/restock', [RestockController::class, 'store'])->name('restock.store');
+
+        // Finance Dashboard (BARU)
+        Route::get('/finance', [App\Http\Controllers\Admin\FinanceController::class, 'index'])->name('finance.index');
     });
 
 });

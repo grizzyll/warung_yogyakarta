@@ -31,15 +31,25 @@ class AuthenticatedSessionController extends Controller
         $role = $request->user()->role;
 
         // Logika Pengarahan
+        // ... (kode atas sama) ...
+
+        // LOGIKA REDIRECT FIX
         if ($role === 'cashier') {
             return redirect()->route('pos.index');
-        } elseif ($role === 'kitchen') {
+        } 
+        elseif ($role === 'kitchen') {
             return redirect()->route('kitchen.index');
-        } elseif ($role === 'owner' || $role === 'admin') {
+        } 
+        elseif ($role === 'owner') {
+            // Owner ke Dashboard
             return redirect()->route('dashboard');
+        } 
+        elseif ($role === 'admin') {
+            // Admin JANGAN ke Dashboard, tapi ke Menu Belanja (Tugas Utama)
+            return redirect()->route('restock.create');
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect('/');
     }
     /**
      * Destroy an authenticated session.
