@@ -53,6 +53,21 @@ Route::middleware('role:owner')->group(function () {
         Route::get('/finance', [App\Http\Controllers\Admin\FinanceController::class, 'index'])->name('finance.index');
     });
 
+    // E. AREA LAPORAN & EXPORT
+    Route::middleware('role:owner,admin')->group(function () {
+        Route::get('/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export/orders', [App\Http\Controllers\Admin\ReportController::class, 'exportOrders'])->name('reports.export.orders');
+        Route::get('/reports/export/restocks', [App\Http\Controllers\Admin\ReportController::class, 'exportRestocks'])->name('reports.export.restocks');
+    });
+
+    // F. MANAJEMEN PEGAWAI (Hanya Owner)
+    Route::middleware('role:owner')->group(function () {
+        Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
+        Route::delete('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
+         Route::get('/users/{id}/edit', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update');
+    });
 });
 
 require __DIR__.'/auth.php';

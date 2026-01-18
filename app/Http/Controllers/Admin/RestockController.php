@@ -22,7 +22,7 @@ class RestockController extends Controller
     }
 
     // 2. Proses Simpan & Tambah Stok
-   public function store(Request $request)
+    public function store(Request $request)
     {
         // Validasi... (sama seperti sebelumnya)
         $request->validate([
@@ -36,19 +36,18 @@ class RestockController extends Controller
 
             // 1. Hitung Total Belanja
             $grandTotal = 0;
-            foreach($request->items as $item) {
+            foreach ($request->items as $item) {
                 $grandTotal += $item['price'] * $item['qty'];
             }
 
-            // 2. Tentukan Status & Batas Nominal (Misal: 1 Juta)
-            $limitApproval = 1000000; 
-            
+            // 2. Batas Nominal: 10 Juta
+            $limitApproval = 10000000;
             // Jika total > 1 juta, status PENDING. Jika kecil, APPROVED.
             $status = ($grandTotal > $limitApproval) ? 'pending' : 'approved';
 
             // 3. Simpan Header
             $restock = Restock::create([
-                'invoice_number' => $request->invoice_number ?? 'INV-'.time(),
+                'invoice_number' => $request->invoice_number ?? 'INV-' . time(),
                 'supplier_id' => $request->supplier_id,
                 'total_spent' => $grandTotal,
                 'purchase_date' => $request->purchase_date,
@@ -57,8 +56,8 @@ class RestockController extends Controller
             ]);
 
             // 4. Simpan Detail Item
-            foreach($request->items as $ingId => $data) {
-                if($data['qty'] > 0) {
+            foreach ($request->items as $ingId => $data) {
+                if ($data['qty'] > 0) {
                     RestockItem::create([
                         'restock_id' => $restock->id,
                         'ingredient_id' => $ingId,
@@ -77,14 +76,14 @@ class RestockController extends Controller
             }
 
             DB::commit();
-DB::commit();
+            DB::commit();
 
             // LOGIKA PENGARAHAN (REDIRECT)
             // Mau Pending atau Sukses, kembalikan ke Halaman Keuangan (Finance) milik Admin.
-            
+
             if ($status === 'pending') {
                 // Pesan khusus kalau Pending
-                return redirect()->route('finance.index')->with('success', 'Belanjaan Besar (Rp '.number_format($grandTotal).') tercatat! Menunggu Approval Owner agar stok masuk.');
+                return redirect()->route('finance.index')->with('success', 'Belanjaan Besar (Rp ' . number_format($grandTotal) . ') tercatat! Menunggu Approval Owner agar stok masuk.');
             } else {
                 // Pesan kalau langsung Sukses (Nominal Kecil)
                 return redirect()->route('finance.index')->with('success', 'Stok berhasil ditambahkan dan pengeluaran tercatat!');

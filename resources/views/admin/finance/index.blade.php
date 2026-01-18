@@ -23,7 +23,19 @@
     <div class="bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
             <h3 class="font-bold text-gray-800"><i class="fas fa-list-alt text-primary mr-2"></i> Jurnal Transaksi</h3>
-            <button class="text-sm text-primary font-bold hover:underline">Export Excel (Coming Soon)</button>
+          <div class="flex gap-2">
+    <!-- Tombol Export Pemasukan (Hijau) -->
+    <a href="{{ route('reports.export.orders') }}" target="_blank" 
+       class="inline-flex items-center px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-bold hover:bg-green-200 transition shadow-sm">
+        <i class="fas fa-file-excel mr-1.5"></i> Export Penjualan
+    </a>
+
+    <!-- Tombol Export Pengeluaran (Merah) -->
+    <a href="{{ route('reports.export.restocks') }}" target="_blank" 
+       class="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-xs font-bold hover:bg-red-200 transition shadow-sm">
+        <i class="fas fa-file-excel mr-1.5"></i> Export Belanja
+    </a>
+</div>
         </div>
         
         <div class="overflow-x-auto">

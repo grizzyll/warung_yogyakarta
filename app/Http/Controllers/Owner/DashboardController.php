@@ -11,64 +11,131 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1. DATA KEUANGAN (Harian & Bulanan)
+        // 1. FILTER PARAMETERS
+        $filter = $request->query('filter', 'week'); // week, month, year
+        $chartMode = $request->query('mode', 'profit'); // profit (vs expense) atau growth (vs last year)
+        $selectedYear = $request->query('year', Carbon::now()->year);
+
         $today = Carbon::today();
-        $thisMonth = Carbon::now()->month;
+        $labels = [];
 
-        // Omzet Hari Ini (Hanya yang sudah bayar)
-        $dailyRevenue = Order::whereDate('created_at', $today)
-            ->where('payment_status', 'paid')
-            ->sum('total_price');
+        // Arrays untuk Mode Profit
+        $incomeData = [];
+        $expenseData = [];
+        $profitData = [];
 
-        // Omzet Bulan Ini
-        $monthlyRevenue = Order::whereMonth('created_at', $thisMonth)
-            ->where('payment_status', 'paid')
-            ->sum('total_price');
+        // Arrays untuk Mode Growth
+        $currentData = [];
+        $previousData = [];
 
-        // Total Transaksi Hari Ini
-        $dailyCount = Order::whereDate('created_at', $today)->count();
+        // 2. SETUP PERIODE
+        if ($filter == 'year') {
+            // Tahunan (Bulanan Jan-Des)
+            $period = \Carbon\CarbonPeriod::create($selectedYear . '-01-01', '1 month', $selectedYear . '-12-01');
+            $grouping = 'monthly';
+        } elseif ($filter == 'month') {
+            // Bulanan (Harian tgl 1-31)
+            $period = \Carbon\CarbonPeriod::create(Carbon::create($selectedYear, Carbon::now()->month, 1), Carbon::create($selectedYear, Carbon::now()->month)->endOfMonth());
+            $grouping = 'daily';
+        } else {
+            // Mingguan (Harian 7 hari terakhir)
+            $period = \Carbon\CarbonPeriod::create(Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek());
+            $grouping = 'daily';
+        }
 
-        // 2. DATA STOK KRITIS (Low Stock Alert)
-        // Ambil bahan yang stoknya DI BAWAH batas alert
+        // 3. LOOPING DATA (Single Loop Efficient)
+        foreach ($period as $date) {
+            // FORMAT LABEL
+            if ($grouping == 'monthly') {
+                if ($date->year > Carbon::now()->year || ($date->year == Carbon::now()->year && $date->month > Carbon::now()->month)) {
+                    // Masa depan skip (biar grafik ga turun ke 0 mendadak)
+                    $labels[] = $date->format('M');
+                    $incomeData[] = null;
+                    $expenseData[] = null;
+                    $profitData[] = null;
+                    $currentData[] = null;
+                    $previousData[] = null;
+                    continue;
+                }
+                $labels[] = $date->format('M');
+
+                // Query Bulanan
+                $inc = Order::whereYear('created_at', $date->year)->whereMonth('created_at', $date->month)->where('payment_status', 'paid')->sum('total_price');
+                $exp = Restock::whereYear('purchase_date', $date->year)->whereMonth('purchase_date', $date->month)->where('status', 'approved')->sum('total_spent');
+
+                // Query Tahun Lalu (Untuk Growth)
+                $prevInc = Order::whereYear('created_at', $date->year - 1)->whereMonth('created_at', $date->month)->where('payment_status', 'paid')->sum('total_price');
+
+            } else {
+                // Query Harian
+                $labels[] = $date->format('d M');
+                $fDate = $date->format('Y-m-d');
+
+                $inc = Order::whereDate('created_at', $fDate)->where('payment_status', 'paid')->sum('total_price');
+                $exp = Restock::whereDate('purchase_date', $fDate)->where('status', 'approved')->sum('total_spent');
+
+                // Query Hari/Minggu Lalu (Untuk Growth)
+                $prevDate = $filter == 'month' ? $date->copy()->subMonth() : $date->copy()->subWeek();
+                $prevInc = Order::whereDate('created_at', $prevDate)->where('payment_status', 'paid')->sum('total_price');
+            }
+
+            // Push ke Array Profit
+            $incomeData[] = $inc;
+            $expenseData[] = $exp;
+            $profitData[] = $inc - $exp;
+
+            // Push ke Array Growth
+            $currentData[] = $inc;
+            $previousData[] = $prevInc;
+        }
+
+        // 4. DATA LAINNYA (Summary Cards)
+        $incomeTotal = Order::whereYear('created_at', $selectedYear)->where('payment_status', 'paid')->sum('total_price');
+        $expenseTotal = Restock::whereYear('purchase_date', $selectedYear)->where('status', 'approved')->sum('total_spent');
+        $netProfit = $incomeTotal - $expenseTotal;
+        $dailyRevenue = Order::whereDate('created_at', Carbon::today())->where('payment_status', 'paid')->sum('total_price');
+        $dailyCount = Order::whereDate('created_at', Carbon::today())->count();
+
+        // Data Approval & Stok
         $lowStocks = Ingredient::whereColumn('current_stock', '<=', 'stock_alert')->get();
+        $pendingApprovals = Order::where('status', 'waiting_approval')->with('orderItems.product')->get();
+        $pendingRestocks = Restock::where('status', 'pending')->with(['supplier', 'items.ingredient'])->get();
 
-        // 3. APPROVAL CATERING / PESANAN BESAR
-        // Cari orderan yang statusnya pending DAN (tipe catering ATAU total > 500rb)
-           $pendingApprovals = Order::where('status', 'waiting_approval') 
-            ->with('orderItems.product')
-            ->get();
-        // 4. APPROVAL BELANJA STOK (Fitur Baru)
-        // Cari belanjaan admin yang statusnya pending
-        $pendingRestocks = Restock::where('status', 'pending')
-            ->with(['supplier', 'items.ingredient']) // Load detail supplier & bahan
-            ->get();
-
-        // Kirim semua variabel ke View
         return view('owner.dashboard', compact(
-            'dailyRevenue', 
-            'monthlyRevenue', 
-            'dailyCount', 
-            'lowStocks', 
-            'pendingApprovals', 
+            'filter',
+            'chartMode',
+            'selectedYear',
+            'labels',
+            'incomeData',
+            'expenseData',
+            'profitData', // Data Profit Mode
+            'currentData',
+            'previousData', // Data Growth Mode
+            'incomeTotal',
+            'expenseTotal',
+            'netProfit',
+            'dailyRevenue',
+            'dailyCount',
+            'lowStocks',
+            'pendingApprovals',
             'pendingRestocks'
         ));
     }
-
     // Fungsi: Owner menyetujui Belanjaan Admin (Restock)
     public function approveRestock($id)
     {
         $restock = Restock::with('items')->find($id);
 
         if ($restock && $restock->status === 'pending') {
-            
+
             // A. Ubah Status jadi Approved
             $restock->status = 'approved';
             $restock->save();
 
             // B. MASUKKAN STOK KE GUDANG SEKARANG
-            foreach($restock->items as $item) {
+            foreach ($restock->items as $item) {
                 $ingredient = Ingredient::find($item->ingredient_id);
                 // Tambah stok saat ini dengan jumlah beli
                 $ingredient->increment('current_stock', $item->quantity);

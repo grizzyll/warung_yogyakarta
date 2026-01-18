@@ -23,24 +23,21 @@
                      @click="addToCart(product)"
                      class="group bg-white rounded-xl shadow-sm hover:shadow-lg cursor-pointer transition-all border border-gray-200 flex flex-col h-64 overflow-hidden relative">
                     
-                    <!-- 1. BAGIAN GAMBAR (Tinggi Kunci Mati h-36 = 144px) -->
+                    <!-- 1. BAGIAN GAMBAR -->
                     <div class="h-36 bg-gray-200 flex items-center justify-center relative shrink-0 overflow-hidden">
-                        
-                        <!-- JIKA ADA GAMBAR -->
+                        <!-- Gambar -->
                         <img v-if="product.image" 
                              :src="'/images/' + product.image" 
                              alt="Menu"
-                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                             @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'">
                         
-                        <!-- JIKA TIDAK ADA GAMBAR (Icon Default) -->
-                        <div v-else class="z-0">
+                        <!-- Icon Fallback -->
+                        <div :class="product.image ? 'hidden' : 'flex'" class="w-full h-full items-center justify-center z-0">
                             <i v-if="product.category === 'Minuman'" class="fas fa-glass-water text-5xl text-gray-400"></i>
                             <i v-else-if="product.category === 'Paket'" class="fas fa-box-open text-5xl text-gray-400"></i>
                             <i v-else class="fas fa-utensils text-5xl text-gray-400"></i>
                         </div>
-                        
-                        <!-- Gradient Bayangan -->
-                        <div class="absolute inset-0 bg-gradient-to-t from-gray-900/10 to-transparent pointer-events-none"></div>
                         
                         <!-- Harga -->
                         <div class="absolute top-2 right-2 bg-white/95 backdrop-blur px-2 py-1 rounded text-xs font-bold text-gray-800 shadow-sm z-10">
@@ -48,7 +45,7 @@
                         </div>
                     </div>
 
-                    <!-- 2. BAGIAN TEKS (Sisa Ruang) -->
+                    <!-- 2. BAGIAN TEKS -->
                     <div class="p-3 bg-white flex flex-col flex-1 relative z-10">
                         <h3 class="font-bold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-primary mb-1">
                             {{ product.name }}
@@ -58,14 +55,11 @@
                             <span class="text-[10px] text-gray-500 uppercase bg-gray-100 px-2 py-1 rounded font-bold">
                                 {{ product.category }}
                             </span>
-                            
-                            <!-- Tombol Plus Kecil -->
                             <div class="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs shadow">
                                 <i class="fas fa-plus"></i>
                             </div>
                         </div>
                     </div>
-
                 </div>
 
             </div>
@@ -81,7 +75,7 @@
                 </h2>
             </div>
 
-            <!-- List -->
+            <!-- List Pesanan -->
             <div class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
                 <div v-if="cart.length === 0" class="h-full flex flex-col items-center justify-center text-gray-400 text-sm">
                     <i class="fas fa-basket-shopping text-2xl mb-2 opacity-50"></i>
@@ -104,7 +98,16 @@
                 </div>
             </div>
 
-            <!-- Footer -->
+            <!-- INPUT INFO PELANGGAN (Disini Posisi Barunya) -->
+            <div class="px-4 pt-3 bg-white border-t border-gray-100 space-y-2 shrink-0 pb-2">
+                <input v-model="customerName" type="text" placeholder="Nama Pelanggan (Opsional)" 
+                       class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition placeholder-gray-400 text-gray-700">
+                
+                <input v-model="tableNumber" type="text" placeholder="Nomor Meja (Wajib)" 
+                       class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-primary outline-none transition placeholder-gray-400 text-gray-700">
+            </div>
+
+            <!-- Footer Total -->
             <div class="p-4 bg-gray-50 border-t border-gray-100 rounded-b-xl">
                 <div class="flex justify-between items-end mb-3">
                     <span class="text-xs text-gray-500 font-bold">TOTAL</span>
@@ -129,6 +132,10 @@ const activeCategory = ref('Semua');
 const cart = ref([]);
 const isLoading = ref(false);
 
+// Ref Baru untuk Input
+const tableNumber = ref('');
+const customerName = ref('');
+
 const filteredProducts = computed(() => {
     return activeCategory.value === 'Semua' 
         ? props.products 
@@ -152,9 +159,13 @@ const totalPrice = computed(() => cart.value.reduce((sum, i) => sum + (i.price *
 const cartTotalQty = computed(() => cart.value.reduce((sum, i) => sum + i.qty, 0));
 
 const processPayment = async () => {
-    if (!cart.value.length) return;
+    if (!cart.value.length) return Swal.fire({ icon: 'error', title: 'Ups!', text: 'Keranjang kosong.' });
+    
+    // Validasi Nomor Meja
+    if (!tableNumber.value) return Swal.fire({ icon: 'warning', title: 'Info Kurang', text: 'Nomor Meja wajib diisi!' });
+
     const res = await Swal.fire({
-        title: 'Bayar?', html: `Total: <b>Rp ${formatPrice(totalPrice.value)}</b>`,
+        title: 'Bayar?', html: `Total: <b>Rp ${formatPrice(totalPrice.value)}</b><br>Meja: ${tableNumber.value}`,
         icon: 'question', showCancelButton: true, confirmButtonColor: '#B91C1C', confirmButtonText: 'Ya'
     });
     if (!res.isConfirmed) return;
@@ -162,13 +173,22 @@ const processPayment = async () => {
     isLoading.value = true;
     try {
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        const resp = await axios.post('/pos/store', { cart: cart.value, total_price: totalPrice.value }, { headers: { 'X-CSRF-TOKEN': token }});
+        const resp = await axios.post('/pos/store', { 
+            cart: cart.value, 
+            total_price: totalPrice.value,
+            table_number: tableNumber.value, // Kirim Meja
+            customer_name: customerName.value // Kirim Nama
+        }, { headers: { 'X-CSRF-TOKEN': token }});
+        
         if (resp.data.status === 'success') {
             const nota = resp.data.order_number;
             Swal.fire({ title: 'Sukses', text: 'Nota: ' + nota, icon: 'success', confirmButtonText: '🖨️ Cetak', showCancelButton: true }).then((r) => {
                 if(r.isConfirmed) window.open(`/pos/print/${nota}`, '_blank');
             });
+            // Reset Semua
             cart.value = [];
+            tableNumber.value = '';
+            customerName.value = '';
         }
     } catch (e) {
         Swal.fire('Error', 'Gagal', 'error');

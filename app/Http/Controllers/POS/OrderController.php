@@ -38,8 +38,8 @@ class OrderController extends Controller
             $orderNumber = 'ORD-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
             // --- LOGIKA PEMISAHAN ---
-            // Cek: Apakah ini Catering ATAU Harganya di atas 500rb?
-            $isLargeOrder = ($request->order_type === 'catering' || $request->total_price >= 500000);
+            // Cek: Apakah ini Catering ATAU Harganya di atas 10 JUTA?
+            $isLargeOrder = ($request->order_type === 'catering' || $request->total_price >= 10000000);
 
             // Kalau BESAR -> Status 'waiting_approval' (Dapur GAK LIHAT, Owner LIHAT)
             // Kalau KECIL -> Status 'pending' (Dapur LANGSUNG LIHAT)
@@ -47,7 +47,8 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'order_number' => $orderNumber,
-                'customer_name' => 'Pelanggan Umum',
+                'table_number' => $request->table_number,
+                'customer_name' => $request->customer_name ?? 'Pelanggan Umum',
                 'order_type' => $request->order_type ?? 'dine_in',
                 'status' => $initialStatus, // <--- PENTING!
                 'payment_status' => 'paid',
