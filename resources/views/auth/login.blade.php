@@ -75,14 +75,14 @@
 
                     <!-- Email Address -->
                     <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Karyawan</label>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-envelope text-gray-400"></i>
                             </div>
                             <input id="email" type="email" name="email" :value="old('email')" required autofocus autocomplete="username"
                                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring focus:ring-red-200 transition-all outline-none bg-gray-50 focus:bg-white text-gray-800 placeholder-gray-400"
-                                placeholder="nama@ayam-yogya.com">
+                                placeholder="nama@ayam.com">
                         </div>
                         @error('email')
                             <span class="text-red-500 text-xs mt-1">{{ $message }}</span>
@@ -97,7 +97,8 @@
                                 <i class="fas fa-lock text-gray-400"></i>
                             </div>
                             <input id="password" type="password" name="password" required autocomplete="current-password"
-                                class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring focus:ring-red-200 transition-all outline-none bg-gray-50 focus:bg-white text-gray-800 placeholder-••••••••">
+                                class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring focus:ring-red-200 transition-all outline-none bg-gray-50 focus:bg-white text-gray-800 placeholder-gray-400"
+                                placeholder="password">
                         </div>
                         @error('password')
                             <span class="text-red-500 text-xs mt-1">{{ $message }}</span>

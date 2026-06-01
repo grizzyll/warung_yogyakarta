@@ -5,6 +5,16 @@ use App\Http\Controllers\POS\OrderController;
 use App\Http\Controllers\Kitchen\KitchenDisplayController;
 use App\Http\Controllers\Owner\DashboardController;
 use App\Http\Controllers\Admin\RestockController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+
+// --- JALUR LOGOUT PAKSA (GET REQUEST) ---
+// Taruh ini di paling atas file routes/web.php
+Route::get('/keluar', function () {
+    Auth::logout();
+    Session::flush();
+    return redirect('/login');
+});
 
 // 1. Redirect Halaman Depan ke Login
 Route::get('/', function () {
