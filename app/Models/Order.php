@@ -17,4 +17,9 @@ class Order extends Model
         // Satu Order punya BANYAK Item
         return $this->hasMany(OrderItem::class);
     }
+
+    public function diningTable()
+{
+    return $this->belongsTo(DiningTable::class);
+}
 }

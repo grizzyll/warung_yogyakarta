@@ -38,4 +38,3 @@ Customer Order → Cashier → Kitchen (real-time notification)
                          → Finance (transaction recorded)
                          → Owner (visible in report)
 Finance → Supplier (procurement trigger when stock low)
-```
