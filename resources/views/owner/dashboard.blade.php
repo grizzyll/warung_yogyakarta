@@ -215,7 +215,7 @@
             datasets = [
                 {
                     label: 'Pemasukan',
-                    data: {!! json_encode($incomeData) !!},
+                    data: @json($incomeData), 
                     borderColor: '#10B981', // Emerald
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     borderWidth: 2, 
@@ -226,7 +226,7 @@
                 },
                 {
                     label: 'Pengeluaran',
-                    data: {!! json_encode($expenseData) !!},
+                    data: @json($expenseData),
                     borderColor: '#EF4444', // Red
                     backgroundColor: 'rgba(239, 68, 68, 0.05)',
                     borderWidth: 2, 
