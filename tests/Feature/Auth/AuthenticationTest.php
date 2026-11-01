@@ -17,9 +17,9 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_users_can_authenticate_using_the_login_screen(): void
+    public function test_owner_diarahkan_ke_dashboard_setelah_login(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'owner']);
 
         $response = $this->post('/login', [
             'email' => $user->email,
@@ -28,6 +28,19 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_kasir_diarahkan_ke_pos_setelah_login(): void
+    {
+        $user = User::factory()->create(['role' => 'cashier']);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('pos.index', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
