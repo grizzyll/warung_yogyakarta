@@ -5,11 +5,11 @@ use App\Http\Controllers\POS\OrderController;
 use App\Http\Controllers\Kitchen\KitchenDisplayController;
 use App\Http\Controllers\Owner\DashboardController;
 use App\Http\Controllers\Admin\RestockController;
+use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 // --- JALUR LOGOUT PAKSA (GET REQUEST) ---
-// Taruh ini di paling atas file routes/web.php
 Route::get('/keluar', function () {
     Auth::logout();
     Session::flush();
@@ -21,9 +21,12 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// --- HALAMAN PELANGGAN (tanpa login, diakses lewat QR meja) ---
+Route::get('/m/{token}', [CustomerOrderController::class, 'show'])->name('customer.menu');
+
 // --- SEMUA JALUR DI BAWAH INI BUTUH LOGIN ---
 Route::middleware('auth')->group(function () {
-    
+
     // A. AREA KASIR / POS
     // Akses: Kasir (Kerja), Owner (Bantu/Pantau), Admin (Pantau)
     Route::middleware('role:cashier,owner,admin')->group(function () {
@@ -41,20 +44,20 @@ Route::middleware('auth')->group(function () {
     });
 
     // C. AREA DASHBOARD MANAGEMENT
-   // HANYA OWNER yang boleh masuk sini
-Route::middleware('role:owner')->group(function () { 
-    
-    // Dashboard Utama
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // HANYA OWNER yang boleh masuk sini
+    Route::middleware('role:owner')->group(function () {
 
-    // Action Approval
-    Route::post('/dashboard/approve/{id}', [DashboardController::class, 'approveOrder'])->name('owner.approve');
-    Route::post('/dashboard/approve-restock/{id}', [DashboardController::class, 'approveRestock'])->name('owner.approveRestock');
-});
+        // Dashboard Utama
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Action Approval
+        Route::post('/dashboard/approve/{id}', [DashboardController::class, 'approveOrder'])->name('owner.approve');
+        Route::post('/dashboard/approve-restock/{id}', [DashboardController::class, 'approveRestock'])->name('owner.approveRestock');
+    });
 
     // D. AREA ADMIN (FINANCE & STOCK)
     Route::middleware('role:admin')->group(function () {
-        
+
         // Restock (Yang lama)
         Route::get('/restock', [RestockController::class, 'create'])->name('restock.create');
         Route::post('/restock', [RestockController::class, 'store'])->name('restock.store');
@@ -75,9 +78,9 @@ Route::middleware('role:owner')->group(function () {
         Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
         Route::post('/users', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('users.store');
         Route::delete('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('users.destroy');
-         Route::get('/users/{id}/edit', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('users.edit');
+        Route::get('/users/{id}/edit', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('users.edit');
         Route::put('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('users.update');
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
